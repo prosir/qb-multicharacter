@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@100&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>QB-Multicharacter</title>
+</head>
+<body class="text-white">
+    <v-app data-app>
+        <div id="app">
+            <div class="container mx-auto">
+                <!-- Main Screen -->
+                <div class="main-screen absolute h-screen w-screen left-0 top-0 z-50">
+                    
+
+
+                    <!-- Character List - Hidden initially -->
+                    <div class="characters-list absolute min-w-[26%] w-fit min-h-[50%] max-h-[70%] rounded-md shadow-lg left-[14%] top-[20%] p-6 transition-all duration-400 bg-gray-900 bg-opacity-80"
+                        v-show="show.characters">
+                        <div class="character-list-header text-center uppercase text-2xl tracking-wider text-white font-extrabold">
+                            <p>{{translations['characters_header']}}</p>
+                        </div>
+                        <div class="characters h-[32vh] overflow-y-scroll pr-2 scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-gray-800">
+                            <template v-for="index in characterAmount">
+                                <!-- Empty Character Slot -->
+                                <div v-if="characters[index] == undefined" class="character relative w-full h-16 mt-4 border-b-4 border-transparent rounded-md cursor-pointer flex items-center hover:bg-red-600 hover:shadow-lg transition-all bg-gray-700"
+                                     v-ripple :class="{'bg-red-600': selectedCharacter == index}" data-cid=""
+                                     @click="click_character(index, 'empty')">
+                                    <span class="slot-name flex-1 pl-4 uppercase tracking-wider font-extrabold">{{translations['emptyslot']}}</span>
+                                    <span class="cid flex-1 text-right pr-4 text-lg font-semibold"></span>
+                                </div>
+                                <!-- Existing Character Slot -->
+                                <div v-else class="character relative w-full h-16 mt-4 border-b-4 border-transparent rounded-md cursor-pointer flex items-center hover:bg-red-600 hover:shadow-lg transition-all bg-gray-700"
+                                     v-ripple :class="{'bg-red-600': selectedCharacter == index}" :data-citizenid="characters[index].citizenid"
+                                     @click="click_character(index, 'existing')">
+                                    <span class="slot-name flex-1 pl-4 uppercase tracking-wider font-extrabold">{{characters[index].charinfo.firstname}} {{characters[index].charinfo.lastname}}</span>
+                                    <span class="cid flex-1 text-right pr-4 text-lg font-semibold">{{characters[index].citizenid}}</span>
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Play/Create/Delete Buttons -->
+                        <div class="character-btns mt-6" v-if="selectedCharacter !== -1">
+                            <v-btn large class="character-btn w-full h-14 mt-4 cursor-pointer bg-green-700 hover:bg-green-800 rounded-md text-white font-bold uppercase" v-ripple @click="play_character">
+                                {{characters[selectedCharacter] !== undefined ? translations['play_button'] : translations['create_button']}}
+                            </v-btn>
+                            <v-btn large class="character-btn w-full h-14 mt-4 cursor-pointer bg-red-700 hover:bg-red-800 rounded-md text-white font-bold uppercase"
+                                   v-if="characters[selectedCharacter] !== undefined && allowDelete == true" v-ripple @click="delete_character">
+                                {{translations['delete_button']}}
+                            </v-btn>
+                        </div>
+                    </div>
+
+                    <!-- Character Info - Hidden initially -->
+                    <div class="character-info absolute min-w-[22.5%] max-w-[27.5%] right-[14%] top-[20%] p-6 rounded-md shadow-lg transition-all duration-400 bg-gray-900 bg-opacity-80"
+                         v-show="show.characters">
+                        <span class="char-info-header block text-center uppercase text-2xl text-white font-extrabold">{{translations['charinfo_header']}}</span>
+                        <span class="no-char block text-center text-lg mt-2 text-white" v-if="characters[selectedCharacter] == undefined">{{translations['charinfo_description']}}</span>
+                        <table class="w-full mt-6" v-if="characters[selectedCharacter] !== undefined">
+                            <tr class="flex mb-4">
+                                <td class="w-1/2 text-white text-sm">{{translations['name']}}:</td>
+                                <td class="w-1/2 text-white text-sm">{{characters[selectedCharacter].charinfo.firstname}} {{characters[selectedCharacter].charinfo.lastname}}</td>
+                            </tr>
+                            <tr class="flex mb-4">
+                                <td class="w-1/2 text-white text-sm">{{translations['birthdate']}}:</td>
+                                <td class="w-1/2 text-white text-sm">{{characters[selectedCharacter].charinfo.birthdate}}</td>
+                            </tr>
+                            <!-- Add additional character info fields as necessary -->
+                        </table>
+                    </div>
+
+                    <!-- Character Register - Hidden initially -->
+                    <div class="fixed inset-0 flex items-center justify-center z-50" v-show="show.register">
+                        <div class="w-96 bg-gray-900 rounded-lg shadow-lg text-white overflow-hidden">
+                          <div class="flex justify-between items-center bg-gray-800 px-6 py-4">
+                            <h2 class="text-2xl font-bold">{{translations['chardel_header']}}</h2>
+                            <button @click="() => {show.register = false; show.characters = true}"
+                                    class="text-gray-400 hover:text-white transition-colors duration-200">
+                              <span class="material-symbols-outlined text-xl">close</span>
+                            </button>
+                          </div>
+                          
+                          <form class="p-6 space-y-4">
+                            <input v-model="registerData.firstname" :placeholder="translations['firstname']"
+                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400">
+                            <input v-model="registerData.lastname" :placeholder="translations['lastname']"
+                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400">
+                            <select v-model="registerData.gender"
+                                    class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white appearance-none">
+                              <option value="" disabled selected>{{translations['gender']}}</option>
+                              <option :value="translations['male']">{{translations['male']}}</option>
+                              <option :value="translations['female']">{{translations['female']}}</option>
+                            </select>
+                            <input v-model="registerData.date" type="date"
+                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white">
+                            
+                            <button @click.prevent="create_character"
+                                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded transition-colors duration-200">
+                              {{translations['create_button']}}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+
+
+
+                    <!-- Character Delete Confirmation - Hidden initially -->
+                    <div class="character-delete absolute w-80 p-6 rounded-md shadow-lg mx-auto left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-80"
+                         v-show="show.delete">
+                        <p class="characters-delete-block-header uppercase text-xl font-extrabold text-white">
+                            {{translations['deletechar_header']}}
+                        </p>
+                        <p class="text-white text-sm">{{translations['deletechar_description']}}</p>
+                        <div class="character-delete-btns flex justify-center mt-4">
+                            <v-btn large class="character-delete-btn w-1/3 bg-green-700 hover:bg-green-800 rounded-md text-white font-bold uppercase" v-ripple @click="delete_character">{{translations['confirm']}}</v-btn>
+                            <v-btn large class="character-delete-btn w-1/3 ml-4 bg-red-700 hover:bg-red-800 rounded-md text-white font-bold uppercase" v-ripple @click="() => {show.characters = true; show.delete = false}">{{translations['cancel']}}</v-btn>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </v-app>
+
+    <script src="vue.js"></script>
+    <script src="swal2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.1.3/axios.min.js"></script>
+    <script src="profanity.js"></script>
+</body>
+
+
+    </body>
+    <script type="text/javascript" src="profanity.js"></script>
+    <script>
+        let re = '(' + profList.join('|') + ')\\b'
+        const regTest = new RegExp(re, 'i');
+
+        const viewmodel = new Vue({
+            el: "#app",
+            vuetify: new Vuetify(),
+            data: {
+                characters: [],
+                chardata: {},
+                show: {
+                    loading: false,
+                    characters: false,
+                    register: false,
+                    delete: false
+                },
+                registerData: {
+                    date: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+                    firstname: undefined,
+                    lastname: undefined,
+                    nationality: undefined,
+                    gender: undefined
+                },
+                allowDelete: false,
+                dataPickerMenu: false,
+                characterAmount: 0,
+                loadingText: "",
+                selectedCharacter: -1,
+                dollar: Intl.NumberFormat('en-US'),
+                translations: {},
+                customNationality:false,
+                nationalities: []
+            },
+            methods: {
+                async fetchData() {
+                    const response = await fetch('https://countriesnow.space/api/v0.1/countries/');
+                    if(response){
+                        const data = await response.json();
+                        const result = data.data;
+
+                        const selectDrop = document.getElementById('nationality');
+                        
+                        result.forEach(obj => {
+                            viewmodel.nationalities.push(obj.country);
+                        });
+                    }
+                },
+                click_character: function(idx, type) {
+                    this.selectedCharacter = idx
+
+                    if (this.characters[idx] !== undefined) {
+                        axios.post('https://qb-multicharacter/cDataPed', {
+                            cData: this.characters[idx]
+                        });
+                    }
+                    else {
+                        axios.post('https://qb-multicharacter/cDataPed', {})
+                    }
+                },
+
+                save: function(date) {
+                    this.$refs.menu.save(date)
+                },
+
+                delete_character: function() {
+                    if (this.show.delete == true) {
+                        this.show.delete = false
+                        axios.post('https://qb-multicharacter/removeCharacter', {
+                            citizenid: this.characters[this.selectedCharacter].citizenid
+                        });
+                    }
+                    else {
+                        if (this.show.characters == true && this.show.register == false) {
+                            this.show.characters = false
+                            this.show.delete = true
+                        }
+                    }
+                },
+
+                play_character: function() {
+                    if (this.selectedCharacter && this.selectedCharacter !== -1) {
+                        var data = this.characters[this.selectedCharacter]
+
+                        if (data !== undefined) {
+                            axios.post('https://qb-multicharacter/selectCharacter', {
+                                cData: data
+                            });
+                            setTimeout(function() {
+                                viewmodel.show.characters = false
+                            }, 500)
+                        }
+                        else {
+                            this.registerData.firstname = undefined
+                            this.registerData.lastname = undefined
+                            this.registerData.nationality = undefined
+                            this.registerData.gender = undefined
+                            this.registerData.date = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
+
+                            this.show.characters = false
+                            this.show.register = true
+                        }
+                    }
+
+                },
+
+                create_character: function() {
+                const { firstname, lastname, gender, date } = this.registerData;
+
+                // Validate if any field is empty
+                if (!firstname || firstname.trim() === "" || 
+                    !lastname || lastname.trim() === "" || 
+                    !gender || gender.trim() === "" || 
+                    !date || date.trim() === "") {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: this.translate('ran_into_issue'),
+                        text: this.translate('forgotten_field'), // Custom error message for missing fields
+                        timer: 5000,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                    return; // Stop further execution if validation fails
+                }
+
+                // Passed validation: create character
+                this.show.register = false;
+                axios.post('https://qb-multicharacter/createNewCharacter', {
+                    firstname: firstname.trim(),
+                    lastname: lastname.trim(),
+                    gender: gender.trim(),
+                    birthdate: date.trim(),
+                    cid: this.selectedCharacter
+                }).catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: this.translate('ran_into_issue'),
+                        text: error.message || this.translate('unknown_error'),
+                        timer: 5000,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                });
+            },
+
+            translate(phrase) {
+                return this.translations[phrase] || phrase;
+            }
+        },
+            mounted () {
+                this.fetchData()
+                var loadingProgress = 0;
+                var loadingDots = 0;
+                window.addEventListener('message', function (event) {
+                    var data = event.data;
+                    switch(data.action) {
+                        case "ui":
+                            viewmodel.customNationality = event.data.customNationality
+                            viewmodel.translations = event.data.translations
+                            viewmodel.characterAmount = data.nChar;
+                            viewmodel.selectedCharacter = -1
+                            viewmodel.show.register = false
+                            viewmodel.show.delete = false
+                            viewmodel.show.characters = false
+                            viewmodel.allowDelete = event.data.enableDeleteButton
+                            EnableDeleteButton = data.enableDeleteButton;
+                            if (data.toggle) {
+                                viewmodel.show.loading = true
+
+                                viewmodel.loadingText = viewmodel.translate('retrieving_playerdata');
+                                var DotsInterval = setInterval(function () {
+                                    loadingDots++;
+                                    loadingProgress++;
+                                    if (loadingProgress == 3) {
+                                        viewmodel.loadingText = viewmodel.translate('validating_playerdata')
+                                    }
+                                    if (loadingProgress == 4) {
+                                        viewmodel.loadingText = viewmodel.translate('retrieving_characters')
+                                    }
+                                    if (loadingProgress == 6) {
+                                        viewmodel.loadingText = viewmodel.translate('validating_characters')
+                                    }
+                                    if (loadingDots == 4) {
+                                        loadingDots = 0;
+                                    }
+                                }, 500);
+
+                                setTimeout(function () {
+                                    axios.post('https://qb-multicharacter/setupCharacters');
+                                    setTimeout(function () {
+                                        clearInterval(DotsInterval);
+                                        loadingProgress = 0;
+                                        viewmodel.loadingText = viewmodel.translate('retrieving_playerdata');
+                                        viewmodel.show.loading = false
+                                        viewmodel.show.characters = true
+                                        axios.post('https://qb-multicharacter/removeBlur');
+                                    }, 2000);
+                                }, 2000);
+                            }
+                            break;
+                        case "setupCharacters":
+                            var newChars = []
+                            for (var i = 0; i < event.data.characters.length; i++) {
+                                newChars[event.data.characters[i].cid] = event.data.characters[i]
+                            }
+                            viewmodel.characters = newChars
+                            break;
+                        case "setupCharInfo":
+                            viewmodel.chardata = event.data.chardata
+                            break;
+                    }
+                });
+            }
+            
+        });
+    </script>
+</html>
