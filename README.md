@@ -1,9 +1,9 @@
 # qb-multicharacter
 Multi Character Feature for QB-Core Framework :people_holding_hands:
 
-Added support for setting default number of characters per player per Rockstar license
+This version has been **reworked using TailwindCSS** to make UI customization easier for developers. The functionality remains the same, but the UI is now more flexible and easier to modify.
 
-# License
+## License
 
     QBCore Framework
     Copyright (C) 2021 Joshua Eger
@@ -19,15 +19,14 @@ Added support for setting default number of characters per player per Rockstar l
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>
-
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ## Dependencies
 - [qb-core](https://github.com/qbcore-framework/qb-core)
 - [qb-spawn](https://github.com/qbcore-framework/qb-spawn) - Spawn selector
-- [qb-apartments](https://github.com/qbcore-framework/qb-apartments) - For giving the player a apartment after creating a character.
-- [qb-clothing](https://github.com/qbcore-framework/qb-clothing) - For the character creation and saving outfits.
-- [qb-weathersync](https://github.com/qbcore-framework/qb-weathersync) - For adjusting the weather while player is creating a character.
+- [qb-apartments](https://github.com/qbcore-framework/qb-apartments) - For giving the player an apartment after creating a character
+- [qb-clothing](https://github.com/qbcore-framework/qb-clothing) - For the character creation and saving outfits
+- [qb-weathersync](https://github.com/qbcore-framework/qb-weathersync) - For adjusting the weather while a player is creating a character
 
 ## Screenshots
 ![Character Selection](https://cdn.discordapp.com/attachments/934470871333105674/1014215694394589294/unknown.png)
@@ -36,16 +35,17 @@ Added support for setting default number of characters per player per Rockstar l
 ## Features
 - Ability to create up to 5 characters and delete any character.
 - Ability to see character information during selection.
+- **TailwindCSS** integration for easier UI customization and maintenance.
 
 ## Installation
 ### Manual
 - Download the script and put it in the `[qb]` directory.
-- Add the following code to your server.cfg/resouces.cfg
-```
+- Add the following code to your `server.cfg` or `resources.cfg`:
+
+```bash
 ensure qb-core
 ensure qb-multicharacter
 ensure qb-spawn
 ensure qb-apartments
 ensure qb-clothing
 ensure qb-weathersync
-```
